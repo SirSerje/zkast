@@ -2,6 +2,8 @@
 
 A command-line tool for managing your notes with a beautiful TUI interface.
 
+![zkast TUI Screenshot](docs/images/screenshot.svg)
+
 ## Version
 
 Current version: **0.1.0**
@@ -12,8 +14,8 @@ Current version: **0.1.0**
 
 1. Clone the repository:
 ```bash
-git clone <repository-url>
-cd my-zk
+git clone https://github.com/SirSerje/zkast
+cd zkast
 ```
 
 2. Create a virtual environment:
