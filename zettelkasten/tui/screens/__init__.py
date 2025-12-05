@@ -1,2 +1,0 @@
-"""TUI screens for Zettelkasten."""
-

@@ -1,11 +1,12 @@
-"""Application state management for Zettelkasten."""
+"""Application state management for zkast."""
+
 import json
 from pathlib import Path
 from typing import List, Optional
 
-from zettelkasten.models.store import Store
-from zettelkasten.models.entry import Entry
-from zettelkasten.storage.base import StorageInterface
+from zkast.models.store import Store
+from zkast.models.entry import Entry
+from zkast.storage.base import StorageInterface
 
 
 class AppState:
@@ -58,7 +59,7 @@ class AppState:
         Initialize state with base path and storage.
 
         Args:
-            base_path: Base directory for zettelkasten
+            base_path: Base directory for zkast
             storage: Storage interface implementation
         """
         self._base_path = Path(base_path)
@@ -87,9 +88,7 @@ class AppState:
             return
 
         try:
-            data = {
-                "current_store": self._current_store.name if self._current_store else None
-            }
+            data = {"current_store": self._current_store.name if self._current_store else None}
             with open(self._state_file, "w") as f:
                 json.dump(data, f)
         except IOError:
@@ -129,12 +128,15 @@ class AppState:
         """Refresh entries from current store."""
         self._load_entries()
 
-    def add_entry(self, entry: Entry):
+    def add_entry(self, entry: Entry) -> Entry:
         """
         Add entry to current store.
 
         Args:
             entry: Entry to add
+
+        Returns:
+            Created entry with ID and timestamps set
         """
         if not self._current_store or not self._storage:
             raise ValueError("No store selected")
@@ -142,4 +144,3 @@ class AppState:
         created_entry = self._storage.create_entry(self._current_store.name, entry)
         self._entries.insert(0, created_entry)  # Add to beginning
         return created_entry
-

@@ -1,9 +1,10 @@
-"""Abstract storage interface for Zettelkasten."""
+"""Abstract storage interface for zkast."""
+
 from abc import ABC, abstractmethod
 from typing import List, Optional
 
-from zettelkasten.models.store import Store
-from zettelkasten.models.entry import Entry
+from zkast.models.store import Store
+from zkast.models.entry import Entry
 
 
 class StorageInterface(ABC):
@@ -95,3 +96,36 @@ class StorageInterface(ABC):
         """
         pass
 
+    @abstractmethod
+    def update_entry(self, store_name: str, entry: Entry) -> Entry:
+        """
+        Update an existing entry in a store.
+
+        Args:
+            store_name: Name of the store
+            entry: Entry object with ID to update
+
+        Returns:
+            Updated Entry object
+
+        Raises:
+            ValueError: If store doesn't exist or entry not found
+        """
+        pass
+
+    @abstractmethod
+    def delete_entry(self, store_name: str, entry_id: int) -> bool:
+        """
+        Delete an entry from a store.
+
+        Args:
+            store_name: Name of the store
+            entry_id: ID of the entry to delete
+
+        Returns:
+            True if deleted, False if not found
+
+        Raises:
+            ValueError: If store doesn't exist
+        """
+        pass

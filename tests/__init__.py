@@ -1,2 +1,3 @@
-"""Tests for Zettelkasten."""
+"""Tests for zkast."""
+
 

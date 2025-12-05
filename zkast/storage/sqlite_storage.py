@@ -1,12 +1,13 @@
-"""SQLite storage implementation for Zettelkasten."""
+"""SQLite storage implementation for zkast."""
+
 import sqlite3
 from datetime import datetime
 from pathlib import Path
 from typing import List, Optional
 
-from zettelkasten.storage.base import StorageInterface
-from zettelkasten.models.store import Store
-from zettelkasten.models.entry import Entry
+from zkast.storage.base import StorageInterface
+from zkast.models.store import Store
+from zkast.models.entry import Entry
 
 
 class SQLiteStorage(StorageInterface):
@@ -57,7 +58,6 @@ class SQLiteStorage(StorageInterface):
         conn = sqlite3.connect(str(db_path))
         cursor = conn.cursor()
 
-        # Get store ID from metadata
         meta_conn = sqlite3.connect(str(self._get_metadata_db_path()))
         meta_cursor = meta_conn.cursor()
         meta_cursor.execute("SELECT id FROM stores WHERE name = ?", (store_name,))
@@ -68,7 +68,6 @@ class SQLiteStorage(StorageInterface):
         if not store_id:
             raise ValueError(f"Store {store_name} not found in metadata")
 
-        # Create entries table
         cursor.execute(
             """
             CREATE TABLE IF NOT EXISTS entries (
@@ -82,7 +81,6 @@ class SQLiteStorage(StorageInterface):
         """
         )
 
-        # Create tags table
         cursor.execute(
             """
             CREATE TABLE IF NOT EXISTS tags (
@@ -92,7 +90,6 @@ class SQLiteStorage(StorageInterface):
         """
         )
 
-        # Create entry_tags junction table
         cursor.execute(
             """
             CREATE TABLE IF NOT EXISTS entry_tags (
@@ -110,11 +107,9 @@ class SQLiteStorage(StorageInterface):
 
     def create_store(self, name: str, format: str = "sqlite") -> Store:
         """Create a new store."""
-        # Check if store already exists
         if self.get_store(name):
             raise ValueError(f"Store '{name}' already exists")
 
-        # Insert into metadata
         db_path = self._get_metadata_db_path()
         conn = sqlite3.connect(str(db_path))
         cursor = conn.cursor()
@@ -133,7 +128,6 @@ class SQLiteStorage(StorageInterface):
         conn.commit()
         conn.close()
 
-        # Initialize store database
         self._init_store_db(name)
 
         return Store(
@@ -195,7 +189,6 @@ class SQLiteStorage(StorageInterface):
         if not store:
             return False
 
-        # Delete from metadata
         db_path = self._get_metadata_db_path()
         conn = sqlite3.connect(str(db_path))
         cursor = conn.cursor()
@@ -203,7 +196,6 @@ class SQLiteStorage(StorageInterface):
         conn.commit()
         conn.close()
 
-        # Delete store database file
         store_db_path = self._get_store_db_path(name)
         if store_db_path.exists():
             store_db_path.unlink()
@@ -226,7 +218,6 @@ class SQLiteStorage(StorageInterface):
 
         now = datetime.now().isoformat()
 
-        # Insert entry
         cursor.execute(
             """
             INSERT INTO entries (store_id, message, created_at, updated_at)
@@ -237,10 +228,8 @@ class SQLiteStorage(StorageInterface):
 
         entry_id = cursor.lastrowid
 
-        # Insert tags
         tag_ids = []
         for tag_name in entry.tags:
-            # Get or create tag
             cursor.execute("SELECT id FROM tags WHERE name = ?", (tag_name,))
             tag_row = cursor.fetchone()
             if tag_row:
@@ -250,7 +239,6 @@ class SQLiteStorage(StorageInterface):
                 tag_id = cursor.lastrowid
             tag_ids.append(tag_id)
 
-            # Link entry to tag
             cursor.execute(
                 "INSERT OR IGNORE INTO entry_tags (entry_id, tag_id) VALUES (?, ?)",
                 (entry_id, tag_id),
@@ -258,7 +246,6 @@ class SQLiteStorage(StorageInterface):
 
         conn.commit()
 
-        # Fetch created entry
         cursor.execute(
             """
             SELECT id, message, created_at, updated_at
@@ -268,7 +255,6 @@ class SQLiteStorage(StorageInterface):
         )
         row = cursor.fetchone()
 
-        # Fetch tags
         cursor.execute(
             """
             SELECT t.name FROM tags t
@@ -298,7 +284,6 @@ class SQLiteStorage(StorageInterface):
         conn = sqlite3.connect(str(db_path))
         cursor = conn.cursor()
 
-        # Fetch entries
         cursor.execute(
             """
             SELECT id, message, created_at, updated_at
@@ -313,7 +298,6 @@ class SQLiteStorage(StorageInterface):
         for entry_row in entry_rows:
             entry_id = entry_row[0]
 
-            # Fetch tags for this entry
             cursor.execute(
                 """
                 SELECT t.name FROM tags t
@@ -331,15 +315,125 @@ class SQLiteStorage(StorageInterface):
                     store_id=store_id,
                     message=entry_row[1],
                     tags=tags,
-                    created_at=datetime.fromisoformat(entry_row[2])
-                    if entry_row[2]
-                    else None,
-                    updated_at=datetime.fromisoformat(entry_row[3])
-                    if entry_row[3]
-                    else None,
+                    created_at=datetime.fromisoformat(entry_row[2]) if entry_row[2] else None,
+                    updated_at=datetime.fromisoformat(entry_row[3]) if entry_row[3] else None,
                 )
             )
 
         conn.close()
         return entries
 
+    def update_entry(self, store_name: str, entry: Entry) -> Entry:
+        """Update an existing entry in a store."""
+        if not entry.id:
+            raise ValueError("Entry ID is required for update")
+        
+        store_id = self._get_store_id(store_name)
+        db_path = self._get_store_db_path(store_name)
+        conn = sqlite3.connect(str(db_path))
+        cursor = conn.cursor()
+
+        # Check if entry exists
+        cursor.execute(
+            "SELECT id FROM entries WHERE id = ? AND store_id = ?",
+            (entry.id, store_id)
+        )
+        if not cursor.fetchone():
+            conn.close()
+            raise ValueError(f"Entry with ID {entry.id} not found")
+
+        # Update entry
+        now = datetime.now().isoformat()
+        cursor.execute(
+            """
+            UPDATE entries 
+            SET message = ?, updated_at = ?
+            WHERE id = ? AND store_id = ?
+        """,
+            (entry.message, now, entry.id, store_id),
+        )
+
+        # Remove old tags
+        cursor.execute("DELETE FROM entry_tags WHERE entry_id = ?", (entry.id,))
+
+        # Add new tags
+        tag_ids = []
+        for tag_name in entry.tags:
+            cursor.execute("SELECT id FROM tags WHERE name = ?", (tag_name,))
+            tag_row = cursor.fetchone()
+            if tag_row:
+                tag_id = tag_row[0]
+            else:
+                cursor.execute("INSERT INTO tags (name) VALUES (?)", (tag_name,))
+                tag_id = cursor.lastrowid
+            tag_ids.append(tag_id)
+
+            cursor.execute(
+                "INSERT OR IGNORE INTO entry_tags (entry_id, tag_id) VALUES (?, ?)",
+                (entry.id, tag_id),
+            )
+
+        conn.commit()
+
+        # Fetch updated entry
+        cursor.execute(
+            """
+            SELECT id, message, created_at, updated_at
+            FROM entries WHERE id = ? AND store_id = ?
+        """,
+            (entry.id, store_id),
+        )
+        entry_row = cursor.fetchone()
+
+        cursor.execute(
+            """
+            SELECT t.name FROM tags t
+            INNER JOIN entry_tags et ON t.id = et.tag_id
+            WHERE et.entry_id = ?
+        """,
+            (entry.id,),
+        )
+        tag_rows = cursor.fetchall()
+        tags = [row[0] for row in tag_rows]
+
+        updated_entry = Entry(
+            id=entry_row[0],
+            store_id=store_id,
+            message=entry_row[1],
+            tags=tags,
+            created_at=datetime.fromisoformat(entry_row[2]) if entry_row[2] else None,
+            updated_at=datetime.fromisoformat(entry_row[3]) if entry_row[3] else None,
+        )
+
+        conn.close()
+        return updated_entry
+
+    def delete_entry(self, store_name: str, entry_id: int) -> bool:
+        """Delete an entry from a store."""
+        store_id = self._get_store_id(store_name)
+        db_path = self._get_store_db_path(store_name)
+        conn = sqlite3.connect(str(db_path))
+        cursor = conn.cursor()
+
+        # Check if entry exists
+        cursor.execute(
+            "SELECT id FROM entries WHERE id = ? AND store_id = ?",
+            (entry_id, store_id)
+        )
+        if not cursor.fetchone():
+            conn.close()
+            return False
+
+        # Delete entry tags first (foreign key constraint)
+        cursor.execute("DELETE FROM entry_tags WHERE entry_id = ?", (entry_id,))
+        
+        # Delete entry
+        cursor.execute(
+            "DELETE FROM entries WHERE id = ? AND store_id = ?",
+            (entry_id, store_id)
+        )
+
+        conn.commit()
+        conn.close()
+
+        return cursor.rowcount > 0

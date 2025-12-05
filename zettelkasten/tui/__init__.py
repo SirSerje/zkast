@@ -1,2 +1,0 @@
-"""TUI layer for Zettelkasten."""
-

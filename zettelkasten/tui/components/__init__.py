@@ -1,2 +1,0 @@
-"""TUI components for Zettelkasten."""
-

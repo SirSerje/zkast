@@ -113,33 +113,42 @@ Entry(id, store_id, message, tags: List[str], created_at, updated_at)
 - Future API endpoints would be added here
 - TUI calls controls, controls modify state/storage
 
-### 5. TUI Layer (`zettelkasten/tui/`)
+### 5. TUI Layer (`zkast/tui/`)
 
 **Purpose**: Textual-based terminal user interface for rendering and interaction.
 
+**Screen Organization**:
+Screens are organized into categories:
+- `screens/dashboard/` - Dashboard screens
+  - `main_screen.py` - Main dashboard screen
+- `screens/entry/` - Entry-related screens
+  - `entry_editor.py` - Entry creation/editing screen
+  - `entry_list.py` - Debug view screen (all entries)
+  - `entry_delete.py` - Entry deletion screen (TODO: implement)
+- `screens/tags/` - Tag-related screens (TODO: implement)
+- `screens/store/` - Store-related screens (TODO: implement)
+
 **Key Files**:
-- `app.py` - `ZettelkastenApp` main application
-- `screens/main_screen.py` - Main navigation screen
-- `screens/store_select.py` - Store management screen
-- `screens/new_store.py` - Store creation screen
-- `screens/entry_editor.py` - Entry creation/editing screen
-- `screens/entry_list.py` - Debug view screen
+- `app.py` - `ZkastApp` main application
+- `screens/dashboard/main_screen.py` - Main dashboard screen
+- `screens/entry/entry_editor.py` - Entry creation/editing screen
+- `screens/entry/entry_list.py` - Debug view screen
+- `screens/entry/entry_delete.py` - Entry deletion screen (placeholder)
 
 **Screen Hierarchy**:
 ```
-ZettelkastenApp
-  └── MainScreen (default)
-      ├── StoreSelectScreen (modal)
-      │   └── NewStoreScreen (modal)
+ZkastApp
+  └── MainScreen (default dashboard)
       ├── EntryEditorScreen (modal)
-      └── EntryListScreen (modal)
+      ├── EntryListScreen (modal)
+      └── EntryDeleteScreen (modal, TODO)
 ```
 
 **Keyboard Bindings**:
-- Main: `s` (stores), `c` (create), `d` (debug), `q` (quit)
-- Store Select: `n` (new), `Esc` (cancel)
+- Dashboard: `c` (create entry), `d` (debug view), `e` (edit selected), `z` (navigate to card), `↑↓` (scroll), `q` (quit)
 - Entry Editor: `Ctrl+S` (save), `Esc` (cancel)
 - Entry List: `q`/`Esc` (close)
+- Navigation: Press `z`, enter card number (1-N), press Enter to jump to that card
 
 **Design Principles**:
 - TUI only renders state, doesn't modify it directly
@@ -337,4 +346,6 @@ controls = Controls(state, storage)
 - Docstrings for all public methods
 - Black formatting (line length 100)
 - MyPy for type checking
+
+
 

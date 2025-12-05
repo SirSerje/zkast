@@ -1,14 +1,14 @@
-"""Setup configuration for Zettelkasten CLI tool."""
+"""Setup configuration for zkast CLI tool."""
 from setuptools import setup, find_packages
 
 with open("README.md", "r", encoding="utf-8") as fh:
     long_description = fh.read()
 
 setup(
-    name="zettelkasten",
+    name="zkast",
     version="0.1.0",
     author="Your Name",
-    description="A CLI tool for managing Zettelkasten notes",
+    description="A CLI tool for managing notes",
     long_description=long_description,
     long_description_content_type="text/markdown",
     packages=find_packages(),
@@ -31,8 +31,9 @@ setup(
     ],
     entry_points={
         "console_scripts": [
-            "zk=zettelkasten.cli:main",
+            "zkast=zkast.cli:main",
         ],
     },
 )
+
 
