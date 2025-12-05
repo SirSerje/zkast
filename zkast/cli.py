@@ -1,26 +1,27 @@
-"""CLI entry point for Zettelkasten."""
+"""CLI entry point for zkast."""
+
 from typing import Tuple
 import click
 from pathlib import Path
 from rich.console import Console
 from rich.table import Table
 
-from zettelkasten.state import AppState
-from zettelkasten.storage import SQLiteStorage
-from zettelkasten.controls import Controls
-from zettelkasten.tui.app import ZettelkastenApp
+from zkast.state import AppState
+from zkast.storage import SQLiteStorage
+from zkast.controls import Controls
+from zkast.tui.app import ZkastApp
 
 console = Console()
 
 
-def get_zk_path() -> Path:
-    """Get the zettelkasten directory path."""
-    return Path.cwd() / ".zettelkasten"
+def get_zkast_path() -> Path:
+    """Get the zkast directory path."""
+    return Path.cwd() / ".zkast"
 
 
 def ensure_initialized() -> Tuple[AppState, Controls]:
     """
-    Ensure zettelkasten is initialized and return state/controls.
+    Ensure zkast is initialized and return state/controls.
 
     Returns:
         Tuple of (AppState, Controls)
@@ -28,26 +29,26 @@ def ensure_initialized() -> Tuple[AppState, Controls]:
     Raises:
         click.ClickException: If not initialized
     """
-    zk_path = get_zk_path()
-    if not zk_path.exists():
-        raise click.ClickException(
-            "Zettelkasten not initialized. Run 'zk init' first."
-        )
+    zkast_path = get_zkast_path()
+    if not zkast_path.exists():
+        raise click.ClickException("zkast not initialized. Run 'zkast init' first.")
 
     state = AppState()
-    storage = SQLiteStorage(zk_path)
-    state.initialize(zk_path, storage)
+    storage = SQLiteStorage(zkast_path)
+    state.initialize(zkast_path, storage)
 
     controls = Controls(state, storage)
 
     return state, controls
 
 
-@click.group()
+@click.group(invoke_without_command=True)
 @click.version_option(version="0.1.0")
-def cli():
-    """Zettelkasten CLI - A tool for managing your notes."""
-    pass
+@click.pass_context
+def cli(ctx):
+    """zkast CLI - A tool for managing your notes."""
+    if ctx.invoked_subcommand is None:
+        click.echo(ctx.get_help())
 
 
 @cli.command()
@@ -58,27 +59,23 @@ def cli():
     help="Storage format (currently only sqlite available)",
 )
 def init(format: str):
-    """Initialize zettelkasten in the current directory."""
-    zk_path = get_zk_path()
+    """Initialize zkast in the current directory."""
+    zkast_path = get_zkast_path()
 
-    if zk_path.exists():
-        if click.confirm(
-            "Zettelkasten already initialized. Re-initialize? (This won't delete data)"
-        ):
-            console.print(f"Re-initializing zettelkasten at {zk_path}")
+    if zkast_path.exists():
+        if click.confirm("zkast already initialized. Re-initialize? (This won't delete data)"):
+            console.print(f"Re-initializing zkast at {zkast_path}")
         else:
             console.print("Initialization cancelled.")
             return
 
-    zk_path.mkdir(parents=True, exist_ok=True)
-    console.print(f"[green]✓[/green] Zettelkasten initialized at {zk_path}")
+    zkast_path.mkdir(parents=True, exist_ok=True)
+    console.print(f"[green]✓[/green] zkast initialized at {zkast_path}")
 
-    # Initialize storage
-    storage = SQLiteStorage(zk_path)
+    storage = SQLiteStorage(zkast_path)
     state = AppState()
-    state.initialize(zk_path, storage)
+    state.initialize(zkast_path, storage)
 
-    # Prompt for creating initial store
     if click.confirm("Would you like to create an initial store?"):
         store_name = click.prompt("Enter store name", default="default")
         try:
@@ -87,6 +84,8 @@ def init(format: str):
             console.print(f"[green]✓[/green] Created store: {store_name}")
         except ValueError as e:
             console.print(f"[red]Error:[/red] {e}")
+    else:
+        console.print("Ok")
 
 
 @cli.group()
@@ -111,9 +110,7 @@ def store_list():
         table.add_column("Format", style="magenta")
         table.add_column("Created", style="green")
 
-        current_store_name = (
-            state.current_store.name if state.current_store else None
-        )
+        current_store_name = state.current_store.name if state.current_store else None
 
         for store in stores:
             marker = "* " if store.name == current_store_name else "  "
@@ -189,14 +186,11 @@ def entry_create(text: str, tags: str):
 
         if not state.current_store:
             console.print(
-                "[red]Error:[/red] No store selected. Use 'zk store switch <name>' first."
+                "[red]Error:[/red] No store selected. Use 'zkast store switch <name>' first."
             )
             return
 
-        # Parse tags
         tag_list = [tag.strip() for tag in tags.split(",") if tag.strip()] if tags else []
-
-        # Create entry
         entry = controls.create_entry(text, tag_list)
         console.print(f"[green]✓[/green] Entry created with ID: {entry.id}")
     except click.ClickException as e:
@@ -219,14 +213,11 @@ def create(text: str, tags: str):
 
         if not state.current_store:
             console.print(
-                "[red]Error:[/red] No store selected. Use 'zk store switch <name>' first."
+                "[red]Error:[/red] No store selected. Use 'zkast store switch <name>' first."
             )
             return
 
-        # Parse tags
         tag_list = [tag.strip() for tag in tags.split(",") if tag.strip()] if tags else []
-
-        # Create entry
         entry = controls.create_entry(text, tag_list)
         console.print(f"[green]✓[/green] Entry created with ID: {entry.id}")
     except click.ClickException as e:
@@ -243,7 +234,7 @@ def debug_view():
 
         if not state.current_store:
             console.print(
-                "[red]Error:[/red] No store selected. Use 'zk store switch <name>' first."
+                "[red]Error:[/red] No store selected. Use 'zkast store switch <name>' first."
             )
             return
 
@@ -278,7 +269,7 @@ def tui():
     """Launch the TUI interface."""
     try:
         state, controls = ensure_initialized()
-        app = ZettelkastenApp()
+        app = ZkastApp()
         app.run()
     except click.ClickException as e:
         console.print(f"[red]Error:[/red] {e.message}")

@@ -1,11 +1,12 @@
 """Controls layer for user interactions and future API."""
+
 from typing import Optional, Callable, Any, List
 from pathlib import Path
 
-from zettelkasten.state import AppState
-from zettelkasten.storage.base import StorageInterface
-from zettelkasten.models.store import Store
-from zettelkasten.models.entry import Entry
+from zkast.state import AppState
+from zkast.storage.base import StorageInterface
+from zkast.models.store import Store
+from zkast.models.entry import Entry
 
 
 class Controls:
@@ -26,8 +27,6 @@ class Controls:
         """
         self.state = state
         self.storage = storage
-
-    # Store operations
 
     def create_store(self, name: str, format: str = "sqlite") -> Store:
         """
@@ -84,7 +83,6 @@ class Controls:
         Returns:
             True if deleted, False otherwise
         """
-        # Don't allow deleting current store
         if self.state.current_store and self.state.current_store.name == name:
             return False
 
@@ -92,8 +90,6 @@ class Controls:
         if success:
             self.state.refresh_stores()
         return success
-
-    # Entry operations
 
     def create_entry(self, message: str, tags: List[str]) -> Entry:
         """
@@ -130,11 +126,3 @@ class Controls:
 
         self.state.refresh_entries()
         return self.state.entries
-
-    # Future API methods would go here
-    # Example:
-    # def api_create_entry(self, data: dict) -> dict:
-    #     """API endpoint for creating entries."""
-    #     entry = self.create_entry(data['message'], data.get('tags', []))
-    #     return entry.dict()
-

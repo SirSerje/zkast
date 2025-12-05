@@ -1,6 +1,6 @@
-# Zettelkasten CLI
+# zkast CLI
 
-A command-line tool for managing your Zettelkasten notes with a beautiful TUI interface.
+A command-line tool for managing your notes with a beautiful TUI interface.
 
 ## Version
 
@@ -38,63 +38,63 @@ pip install -e .
 To create a standalone executable using PyInstaller:
 
 ```bash
-pyinstaller --onefile --name zk --console zettelkasten/cli.py
+pyinstaller --onefile --name zkast --console zkast/cli.py
 ```
 
 The executable will be in the `dist/` directory.
 
 ## Quick Start
 
-1. **Initialize Zettelkasten** in your current directory:
+1. **Initialize zkast** in your current directory:
 ```bash
-zk init
+zkast init
 ```
 
-This creates a `.zettelkasten/` directory in your current working directory.
+This creates a `.zkast/` directory in your current working directory.
 
 2. **Create or switch to a store**:
 ```bash
-zk store list          # List all stores
-zk store switch <name> # Switch to a store
+zkast store list          # List all stores
+zkast store switch <name> # Switch to a store
 ```
 
 3. **Create an entry** (opens TUI):
 ```bash
-zk entry create
+zkast entry create
 ```
 
 4. **View all entries** (debug mode):
 ```bash
-zk debug-view
+zkast debug-view
 ```
 
 5. **Launch full TUI**:
 ```bash
-zk tui
+zkast tui
 ```
 
 ## Commands
 
 ### Initialization
 
-- `zk init` - Initialize zettelkasten in the current directory
-  - Creates `.zettelkasten/` directory
+- `zkast init` - Initialize zkast in the current directory
+  - Creates `.zkast/` directory
   - Prompts for creating an initial store
 
 ### Store Management
 
-- `zk store list` - List all available stores
-- `zk store switch <name>` - Switch to a different store
-- `zk store delete <name>` - Delete a store (with confirmation)
+- `zkast store list` - List all available stores
+- `zkast store switch <name>` - Switch to a different store
+- `zkast store delete <name>` - Delete a store (with confirmation)
 
 ### Entry Management
 
-- `zk entry create` - Create a new entry (opens TUI editor)
-- `zk debug-view` - Display all entries in the current store
+- `zkast entry create` - Create a new entry (opens TUI editor)
+- `zkast debug-view` - Display all entries in the current store
 
 ### TUI
 
-- `zk tui` - Launch the full TUI interface
+- `zkast tui` - Launch the full TUI interface
 
 ## TUI Keyboard Shortcuts
 
@@ -117,23 +117,23 @@ zk tui
 
 ```
 my-zk/
-├── zettelkasten/          # Main package
-│   ├── cli.py            # CLI entry point
-│   ├── state.py          # Application state (singleton)
-│   ├── controls.py       # Controls layer (user interactions)
-│   ├── storage/          # Storage layer (strategy pattern)
-│   │   ├── base.py       # Abstract storage interface
+├── zkast/                # Main package
+│   ├── cli.py           # CLI entry point
+│   ├── state.py         # Application state (singleton)
+│   ├── controls.py      # Controls layer (user interactions)
+│   ├── storage/         # Storage layer (strategy pattern)
+│   │   ├── base.py      # Abstract storage interface
 │   │   └── sqlite_storage.py  # SQLite implementation
-│   ├── models/           # Data models (Pydantic)
+│   ├── models/          # Data models (Pydantic)
 │   │   ├── store.py
 │   │   └── entry.py
-│   └── tui/              # TUI layer (Textual)
+│   └── tui/             # TUI layer (Textual)
 │       ├── app.py
-│       └── screens/      # TUI screens
-├── tests/                # Test files
-├── requirements.txt      # Production dependencies
+│       └── screens/     # TUI screens
+├── tests/               # Test files
+├── requirements.txt     # Production dependencies
 ├── requirements-dev.txt # Development dependencies
-└── setup.py             # Package setup
+└── setup.py            # Package setup
 ```
 
 ## Architecture
@@ -150,7 +150,7 @@ The application follows a layered architecture with loose coupling:
 
 Currently, only SQLite storage is supported. The storage layer uses a strategy pattern, making it easy to add other storage backends in the future.
 
-Database files are stored in `.zettelkasten/{store_name}.db`. Each store has its own database file.
+Database files are stored in `.zkast/{store_name}.db`. Each store has its own database file.
 
 ## Data Model
 
@@ -179,24 +179,24 @@ pytest
 ### Code Formatting
 
 ```bash
-black zettelkasten/
+black zkast/
 ```
 
 ### Type Checking
 
 ```bash
-mypy zettelkasten/
+mypy zkast/
 ```
 
 ## Troubleshooting
 
-### "Zettelkasten not initialized"
+### "zkast not initialized"
 
-Run `zk init` in your current directory first.
+Run `zkast init` in your current directory first.
 
 ### "No store selected"
 
-Use `zk store switch <name>` to select a store, or create one through the TUI.
+Use `zkast store switch <name>` to select a store, or create one through the TUI.
 
 ### Database locked errors
 
@@ -209,4 +209,5 @@ Make sure you're not accessing the same store from multiple processes simultaneo
 ## Contributing
 
 [Contributing Guidelines Here]
+
 

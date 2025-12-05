@@ -1,11 +1,12 @@
-"""Entry model for Zettelkasten."""
+"""Entry model for zkast."""
+
 from datetime import datetime
 from typing import List, Optional
 from pydantic import BaseModel, Field
 
 
 class Entry(BaseModel):
-    """Represents a Zettelkasten entry."""
+    """Represents a zkast entry."""
 
     id: Optional[int] = None
     store_id: Optional[int] = None
@@ -20,4 +21,3 @@ class Entry(BaseModel):
         json_encoders = {
             datetime: lambda v: v.isoformat() if v else None,
         }
-

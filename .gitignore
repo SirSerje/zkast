@@ -35,8 +35,11 @@ ENV/
 
 # Project specific
 .zettelkasten/
+.zkast/
+zkast/.zkast/
 *.db
 *.db-journal
+zkast.egg-info/
 
 # PyInstaller
 build/
@@ -52,4 +55,6 @@ htmlcov/
 # OS
 .DS_Store
 Thumbs.db
+
+
 
